@@ -38,6 +38,8 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    cout << "Awaiting for a client request..." << endl;
+
     new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 
     if(new_socket < 0) {
@@ -62,6 +64,7 @@ int main() {
         cout << "Client says: " << buffer << endl;
 
         string data;
+        cout << "> ";
         getline(cin, data);
         strcpy(buffer, data.c_str());
 

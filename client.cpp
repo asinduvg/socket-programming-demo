@@ -11,7 +11,6 @@ using namespace std;
 int main(int argc, char const* argv[]) {
     int sock = 0, client_fd;
     struct sockaddr_in serv_addr{};
-    char* hello = (char*)"Hello from client";
     char buffer[1500] = {0};
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -45,18 +44,19 @@ int main(int argc, char const* argv[]) {
 
     while(true) {
         string data;
+        cout << "> ";
         getline(cin, data);
         memset(&buffer, 0, sizeof(buffer)); // clear the buffer
         strcpy(buffer, data.c_str());
 
         if(data == "quit") {
-            send(sock, (char*)&msg, strlen(buffer), 0);
+            send(sock, (char*)&buffer, strlen(buffer), 0);
             break;
         }
 
-        send(sock, (char*)&msg, strlen(buffer), 0);
+        send(sock, (char*)&buffer, strlen(buffer), 0);
 
-        cout << "Awaiting response..." << endl;
+        cout << "Awaiting client response..." << endl;
 
         memset(&buffer, 0, sizeof(buffer)); // clear the buffer
 

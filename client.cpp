@@ -33,11 +33,21 @@ int main(int argc, char const* argv[]) {
 
     // connect to server
     cout << "Trying to connect to server.." << endl;
-    client_fd = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    if(client_fd < 0) {
-        printf("\nConnection Failed \n");
-        return -1;
+    int i = 0;
+    while(true){
+        client_fd = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+        if(client_fd < 0) {
+            printf("\nConnection Failed \n");
+
+            if(i == 10) return -1;
+            else {
+                printf("Retrying ...\n");
+                i++;
+                continue;
+            }
+        }
+        break;
     }
 
     cout << "Connection with server succeeded!" << endl;
@@ -49,26 +59,17 @@ int main(int argc, char const* argv[]) {
         memset(&buffer, 0, sizeof(buffer)); // clear the buffer
         strcpy(buffer, data.c_str());
 
-        if(data == "quit") {
-            send(sock, (char*)&buffer, strlen(buffer), 0);
-            break;
-        }
-
         send(sock, (char*)&buffer, strlen(buffer), 0);
 
-        cout << "Awaiting client response..." << endl;
+        cout << "Awaiting server response..." << endl;
 
         memset(&buffer, 0, sizeof(buffer)); // clear the buffer
 
         // reading the server message to the buffer
         recv(sock, (char*)&buffer, sizeof(buffer), 0);
 
-        if(!strcmp(buffer, "quit")) {
-            cout << "Server has quit the session!" << endl;
-            break;
-        }
+        cout << buffer << endl;
 
-        cout << "Server says: " << buffer << endl;
     }
 
     // closing the connected socket

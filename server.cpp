@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int main() {
+int mains() {
 
     int server_fd, new_socket, rc, on = 1;
     struct sockaddr_in address{};
@@ -60,6 +60,8 @@ int main() {
 
     while (true) {
 
+        puts("hi inside while loop");
+
         // clear the socket set
         FD_ZERO(&readfds);
 
@@ -90,6 +92,7 @@ int main() {
         // then its an incoming connection
 
         if (FD_ISSET(server_fd, &readfds)) {
+            puts("inside isset");
             new_socket = accept(server_fd, (struct sockaddr *) &address, (socklen_t *) &addrlen);
 
             if (new_socket < 0) {
@@ -109,23 +112,29 @@ int main() {
                 }
             }
 
-            memset(&buffer, 0, sizeof(buffer)); // clear the buffer
-            // read client's message
-            recv(new_socket, (char *) &buffer, sizeof(buffer), 0);
-            printf("Client %d says: %s\n", new_socket, buffer);
-
-            string str(buffer);
-            string response = "Server response to " + str;
-
-            send(new_socket, response.c_str(), strlen(response.c_str()), 0);
+//            memset(&buffer, 0, sizeof(buffer)); // clear the buffer
+//            // read client's message
+//            recv(new_socket, (char *) &buffer, sizeof(buffer), 0);
+//            printf("Client %d says: %s\n", new_socket, buffer);
+//
+//            string str(buffer);
+//            string response = "Server response to " + str;
+//
+//            send(new_socket, response.c_str(), strlen(response.c_str()), 0);
 
         }
+
+        puts("----------");
 
         // else its some IO operation on some other socket
         for (int i = 0; i < max_clients; i++) {
             sd = client_socket[i];
 
+            cout << sd << endl;
+
             if (FD_ISSET(sd, &readfds)) {
+
+                puts("some io operation");
 
                 memset(&buffer, 0, sizeof(buffer)); // clear the buffer
                 recv(sd, (char *) &buffer, sizeof(buffer), 0);

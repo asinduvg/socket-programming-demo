@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int main(int argc, char const* argv[]) {
+int mains(int argc, char const* argv[]) {
     int sock = 0, client_fd;
     struct sockaddr_in serv_addr{};
     char buffer[1500] = {0};

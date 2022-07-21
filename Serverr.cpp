@@ -24,7 +24,7 @@ bool Serverr::createSocket() {
         return false;
     }
 
-    // set socket to be nonblocking
+    // set socket to be non-blocking
     if (ioctl(server_fd, FIONBIO, (char *) &on) < 0) {
         perror("ioctl() failed");
         close(server_fd);
@@ -34,14 +34,15 @@ bool Serverr::createSocket() {
     // forcefully attaching socket to the port
     if (bind(this->server_fd, (struct sockaddr *) &address, sizeof(address)) < 0) {
         perror("bind failed");
-//        exit(EXIT_FAILURE);
-        return false;
+        close(server_fd);
+        exit(-1);
     }
 
     // set the backlog
     if (listen(this->server_fd, 3) < 0) {
-        perror("listen");
-        return false;
+        perror("listen failed");
+        close(server_fd);
+        exit(-1);
     }
 
     cout << "Awaiting for a client request..." << endl;
@@ -60,7 +61,7 @@ void Serverr::waitForClient() {
     max_sd = server_fd;
 
     // infinitely listening for activities
-    while (true) {
+    do  {
 
         // copy the master fd_set to the working fd_set
         memcpy(&working_set, &master_set, sizeof(master_set));
@@ -86,7 +87,6 @@ void Serverr::waitForClient() {
                 desc_ready = -1;
 
                 if (i == server_fd) {
-                    cout << "Server is readable" << endl;
                     // accept all incoming connections in the queue
                     handleNewClient();
                     // this is not the listening socket, therefore an existing connection must be readable
@@ -94,21 +94,14 @@ void Serverr::waitForClient() {
                     // receive all incoming data on this socket before we loop back and call select again
                     handleExistingClient(i);
                 }
-
             }
         }
 
-//        if(FD_ISSET(4, &master_set)) {
-//            puts("first client ok");
-//        }
+    } while (!end_server);
 
-        // checking whether server socket is set and if so, create a new socket
-        // for new incoming client
-        // If something
-//        if (FD_ISSET(this->server_fd, &this->master_set)) this->handleNewClient();
-//        // else looking for existing client connection
-//        this->handleExistingClient();
-
+    // clean up all the sockets that are open
+    for(int i = 0; i <= max_sd; ++i) {
+        if(FD_ISSET(i, &master_set)) close(i);
     }
 }
 
@@ -121,16 +114,12 @@ void Serverr::handleNewClient() {
         if (new_socket < 0) {
             if (errno != EWOULDBLOCK) {
                 perror("accept failed");
-                // end server = true
+                 end_server = true;
             }
-//            exit(EXIT_FAILURE);
             break;
         }
 
         cout << "A new client connected with sd " << new_socket << endl;
-
-        // add new socket to vector of sockets
-//        client_sockets.push_back(new_socket);
 
         // add new socket to fd set
         FD_SET(new_socket, &master_set);
@@ -138,27 +127,22 @@ void Serverr::handleNewClient() {
         if (new_socket > max_sd) max_sd = new_socket;
 
         // loop and accept another incoming connection
-        cout << "inside new client " << endl;
     } while (new_socket != -1);
-
-
-//    readAndSendMessagesClient(new_socket);
-
 }
 
 void Serverr::handleExistingClient(int clientSD) {
     bool close_conn = false;
 
     // clear the buffer
-    memset(&this->buffer, 0, sizeof(this->buffer));
+    memset(&buffer, 0, sizeof(buffer));
 
     // read client's message
-    int rc = recv(clientSD, (char *) &buffer, sizeof(this->buffer), 0);
+    int rc = recv(clientSD, (char *) &buffer, sizeof(buffer), 0);
     if (rc < 0) {
         if (errno != EWOULDBLOCK) {
             perror("recv() failed");
+            close_conn = true;
         }
-        return;
     }
 
     // check whether the client closed the connection

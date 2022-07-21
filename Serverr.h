@@ -17,6 +17,7 @@ private:
     int server_fd;
     int max_sd, desc_ready;
     int on = 1;
+    bool end_server = false;
     vector<int> client_sockets;
     char buffer[1500] = {0};
 
